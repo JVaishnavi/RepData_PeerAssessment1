@@ -1,0 +1,138 @@
+---
+title: "PA1_Template"
+output: html_document
+---
+---
+title: "Assignment1"
+output: html_document
+---
+
+##Loading and preprocessing the data
+```{r}
+setwd("E:\\iitm\\tutorials\\cousera\\DATA\ SCIENTISTS\\5.\ Reproducable\ Research\\Assignment\ 1")
+a <- read.csv("activity.csv")
+b <- a[!is.na(a$steps),]
+```
+
+##What is mean total number of steps taken per day?
+
+```{r result="hide"}
+library(plyr)
+```
+
+```{r}
+q <- ddply(b,.(date),summarize,sum=sum(steps),mean=mean(steps),median=median(steps))
+hist(q$sum,main="Total number of steps taken each day",xlab="Total number of steps",n=20)
+
+
+abline(v=mean(q$sum),col="blue")
+abline(v=median(q$sum),col="red")
+
+mean(q$sum)
+median(q$sum)
+
+q
+```
+
+##What is the average daily activity pattern?
+
+```{r}
+ w <- ddply(b,.(interval),summarize,sum=sum(as.numeric(as.character(steps))),mean=mean(as.numeric(as.character(steps))),median=median(as.numeric(as.character(steps))))
+
+ plot(as.numeric(as.character(w$interval)),as.numeric(as.character(w$mean)),type="l",main="Average daily pattern", xlab="Interval", ylab="Avg number of steps taken")
+
+max = max(w$mean) 
+```
+
+The 5-minute interval that, on average, contains the maximum number of steps is 
+
+```{r}
+max
+```
+
+##Imputing missing values
+
+#### 1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
+
+```{r}
+diff = dim(a)[1]-dim(b)[1]
+```
+
+Total number of missing values in the data set is `r diff`.
+
+#### 2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+
+###### We can do that by filling the missing values with mean of steps of that day
+
+#### 3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+```{r}
+len = dim(a)[1]
+
+c <- merge(q,a)
+for(i in 1:len)
+  if(is.na(c[i,5]))
+    c[i,5]=c[i,3]
+head(c)
+dim(c)
+
+```
+    
+####4.Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. 
+
+```{r}
+
+
+q2 <- ddply(c,.(date),summarize,sum=sum(steps),mean=mean(steps),median=median(steps))
+
+dim(q2)
+head(q2)
+
+hist(q2$sum , main = "Total number of steps taken each day" , xlab = "Total number of steps" , n=20)
+abline(v=mean(q$sum),col="blue")
+abline(v=median(q$sum),col="red")
+
+mean(q$sum)
+median(q$sum)
+
+
+```
+  
+####Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+###### Since we added mean value of steps per day to the missing data, mean steps per day of the new estimated data(with NAs removed) wont change.
+###### But mean steps for each interval over all the days will change.
+
+##Are there differences in activity patterns between weekdays and weekends?
+
+#### 1. Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day
+
+```{r}
+library(chron)
+c <- mutate(c ,factor = factor(!is.weekend(c$date) , labels = c("weekend", "weekday")))
+
+head(c)
+``` 
+
+#### 2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
+```{r}
+
+d <- c[as.character(c$factor)=="weekday",]
+
+wd <- ddply(d,.(interval),summarize,sum=sum(as.numeric(as.character(steps))),mean=mean(as.numeric(as.character(steps))),median=median(as.numeric(as.character(steps))))
+
+e <- c[as.character(c$factor)=="weekend",]
+
+ we <- ddply(d,.(interval),summarize,sum=sum(as.numeric(as.character(steps))),mean=mean(as.numeric(as.character(steps))),median=median(as.numeric(as.character(steps))))
+```
+
+```{r}
+
+plot(as.numeric(as.character(wd$interval)),as.numeric(as.character(wd$mean)),type="l",main="Average daily pattern in weekday days", xlab="Interval", ylab="Avg number of steps taken")
+```
+
+```{r}
+plot(as.numeric(as.character(we$interval)),as.numeric(as.character(we$mean)),type="l",main="Average daily pattern in weekend days", xlab="Interval", ylab="Avg number of steps taken")
+
+```
+
